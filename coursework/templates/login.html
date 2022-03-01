@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title>Login</title> 
+{% endblock %}
+
+{% block body %} 
+    <form action='/loginAPI' method='POST'> 
+        <div class="centre">
+            <label> Username:</label>
+            <input name="username" placeholder="John smith"> 
+            &nbsp;
+            <label> password:</label>
+            <input type='password' name='password' placeholder="Input a secure password"> 
+            &nbsp;
+            <button class="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow">
+                Login
+            </button>
+        </div>
+    </form>
+{% endblock %}

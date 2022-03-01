@@ -1,0 +1,57 @@
+{% extends 'base1.html' %}
+
+{% block head %}
+    <title>Lists</title> 
+{% endblock %}
+
+{% block body %}
+    <div class="content">
+        <h1>To-Do:</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th width='200px'>All lists</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in lists %}
+                <tr>
+                    <td>{{entry.name}}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td>no entries</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <br>
+        <table>
+            <thead>
+                <tr>
+                    <th width='200px'>All Users:</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in users %}
+                <tr>
+                    <td>{{entry.name}}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td>no entries</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </table>
+    <br>
+        <form action='/createList'> 
+            <button class="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow">
+                Add list
+            </button>
+        </form>
+    </div>
+</div>
+    
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title>Create a list</title>
+{% endblock %}
+
+{% block body %}
+<h1>Create list</h1>
+<form action='/createList' method="POST">
+    <label>To-do name: </label>
+    <input name="name" placeholder="Studying physics" id="toDo_create_list">
+    <p>&nbsp;</p>
+    <label>category:</label>
+    <select name='category_create_list' id="category_create_list">
+        <option value='Studying'>Studying</option>
+        <option value='Work'>Work</option>
+        <option value='Health'>Health</option>
+        <option value='Wellbeing'>Wellbeing</option>
+        <option value='Add new category'>Add new category</option>
+    </select>
+    <p>&nbsp;</p>
+    <label>Colour: </label>
+    <input type='color' id="colour_create_list" name="colour_create_list">
+    <br>
+    <button
+        class="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow">
+        Add list
+    </button>
+</form>
+{% endblock %}
