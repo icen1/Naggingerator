@@ -1,22 +1,22 @@
 {% extends 'base1.html' %}
 
 {% block head %}
-    <title>Lists</title> 
+    <title>Bills</title> 
 {% endblock %}
 
 {% block body %}
     <div class="content">
-        <h1>To-Do:</h1>
+        <h1>Bills:</h1>
         <table>
             <thead>
                 <tr>
-                    <th width='200px'>All lists</th>
+                    <th width='400px'>All Bills</th>
                 </tr>
             </thead>
             <tbody>
-                {% for entry in lists %}
+                {% for entry in bills %}
                 <tr>
-                    <td>{{entry.name}}</td>
+                    <td>{{entry.name}} amount:{{entry.amount}} Paid:{{entry.completion}}</td> 
                 </tr>
                 {% else %}
                 <tr>
@@ -26,29 +26,10 @@
             </tbody>
         </table>
         <br>
-        <table>
-            <thead>
-                <tr>
-                    <th width='200px'>All Users:</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for entry in users %}
-                <tr>
-                    <td>{{entry.name}}</td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td>no entries</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </table>
     <br>
         <form action='/createList'> 
             <button class="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow">
-                Add list
+                Add Bill
             </button>
         </form>
     </div>
