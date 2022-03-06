@@ -10,13 +10,15 @@
         <table>
             <thead>
                 <tr>
-                    <th width='400px'>All Bills</th>
+                    <th width='2000px'>All Bills</th>
                 </tr>
             </thead>
             <tbody>
                 {% for entry in bills %}
                 <tr>
-                    <td>{{entry.name}} amount:{{entry.amount}} Paid:{{entry.completion}}</td> 
+                    <td>{{entry.name}} amount:{{entry.amount}} All Paid:{{entry.completion}} Shared with:{{entry.users_with_bill}} Paid:
+                        <form action="/toDoListAPI">
+                        <input type="checkbox" id="Paid" name="paid" value="Paid"> </td> 
                 </tr>
                 {% else %}
                 <tr>

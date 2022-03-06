@@ -132,11 +132,16 @@ def createAPI():
     name = request.form.get('name')
     amount = request.form.get('amount')
     splittingWith = request.form.get('splittingWith')
-    db.session.add(Bills(name,amount,current_user.username,False))
+    splittingWith += f", {current_user.username}"
+    splittingWithSeparated = splittingWith.split(',')
+    for user in splittingWithSeparated:
+        db.session.add(Bills(name,amount,user,splittingWith,False))
+        db.session.commit()
+    db.session.add(Bills(name,amount,current_user.username,splittingWith,False))
     db.session.commit()
     return redirect('/toDoList')
 
-@app.route('/toDoList',methods=['GET','POST'])
+@app.route('/toDoList',methods=['GET'])
 def toDo():
     if current_user.is_authenticated:
         pass
@@ -145,3 +150,11 @@ def toDo():
     users = User.query.all() #might be the issue
     bills = Bills.query.filter_by(user_id = current_user.username)
     return render_template('toDoList.html', users=users,bills=bills)
+@app.route('/toDoListAPI',methods=['POST'])
+def toDoAPI():
+    if current_user.is_authenticated:
+        pass
+    else:
+        return redirect('/login')
+    if (request.form.get('paid') is Checked) && request.from.get('paid') == '1' : #TODO Figure out how to check checkboxes are ticked or not
+        current_user.us

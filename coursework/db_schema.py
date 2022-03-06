@@ -32,23 +32,16 @@ class Bills(db.Model):
     name = db.Column(db.Text())
     amount = db.Column(db.Integer())
     user_id = db.Column(db.Integer(), db.ForeignKey('users.id'))  # this ought to be a "foreign key"
-    completion= db.Column(db.Boolean)
+    users_with_bill = db.Column(db.Text(), db.ForeignKey('users.id'))
+    completion= db.Column(db.Boolean,db.ForeignKey('bills.id'),db.ForeignKey('users.id'))
 
-    def __init__(self, name,amount, user_id,completion):
+    def __init__(self, name,amount, user_id,users_with_bill, completion):
         self.name=name
         self.amount = amount
         self.user_id = user_id
+        self.users_with_bill = users_with_bill
         self.completion = completion
 # put some data into the tables
 def dbinit():
-    user_bill = [
-        User("Ivan","123456",'totallyanemail@mail.com'), 
-        User("Icen","654321",'veryreal@mail.com')
-        ]
-    db.session.add_all(user_bill)
-    bills = [
-        Bills("Idk",50,"Icen",False),
-        Bills("well",50,"Ivan",False)
-    ]
     # commit all the changes to the database file
     db.session.commit()
