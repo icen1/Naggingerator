@@ -37,7 +37,7 @@ login_manager.init_app(app)
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id)) #Might be the issue
+    return User.query.get(int(user_id)) # Might be the issue
 
 #route to the index
 @app.route('/') 
@@ -48,18 +48,17 @@ def index():
 def indexLogged():
     return render_template('indexLogged.html')
 
-@app.route('/login',methods=['GET'])
+@app.route('/login', methods=['GET'])
 def log():
     if current_user.is_authenticated:
         return redirect('/toDoList')
     else:
         return render_template("login.html")
 
-@app.route('/loginAPI',methods=['POST'])
+@app.route('/loginAPI', methods=['POST'])
 def logAPI():
-        
-    name=request.form.get('username')
-    password=request.form.get('password')
+    name = request.form.get('username')
+    password = request.form.get('password')
 
     # find the users with this name
     user = User.query.filter_by(username=name).first() #Might be the issue
@@ -75,31 +74,29 @@ def logAPI():
 
 @app.route('/logout')
 def logout():
-    if current_user.is_authenticated:
-        pass
-    else:
+    if not current_user.is_authenticated:
         return redirect('/login')
     logout_user()
     return redirect('/')
 
-@app.route('/register',methods=['GET'])
+@app.route('/register', methods=['GET'])
 def reg():
     if current_user.is_authenticated:
         return redirect('/login')
 
     return render_template("register.html")
 
-@app.route('/registerAPI',methods=['POST'])
+@app.route('/registerAPI', methods=['POST'])
 def regAPI():
     if current_user.is_authenticated:
         return redirect('/login')
 
-    if request.method=="POST":
-        username=request.form.get('username')
-        password=request.form.get('password')
-        email=request.form.get('email')
-        username = escape(username);
-        email = escape(email);
+    if request.method == "POST":
+        username = request.form.get('username')
+        password = request.form.get('password')
+        email = request.form.get('email')
+        username = escape(username)
+        email = escape(email)
 
         password_hash=security.generate_password_hash(password)
         # create a user with this name and hashed password
@@ -111,50 +108,47 @@ def regAPI():
             db.session.commit()
         except IntegrityError as exc:
             db.session.rollback()
-            return "could not register "+str(exc)
+            return f"could not register {exc}"
         flash("registered succesfully, now log in")
         return redirect('/login')
 
-@app.route('/createList',methods=['GET'])
+@app.route('/createList', methods=['GET'])
 def create():
-    if current_user.is_authenticated:
-        pass
-    else:
+    if not current_user.is_authenticated:
         return redirect('/login')
-    return render_template('createList.html')
+    users = User.query.all() 
+    return render_template('createList.html',users=users)
 
-@app.route('/createListAPI',methods=['POST'])
+@app.route('/createListAPI', methods=['POST'])
 def createAPI():
-    if current_user.is_authenticated:
-        pass
-    else:
+    if not current_user.is_authenticated:
         return redirect('/login')
     name = request.form.get('name')
     amount = request.form.get('amount')
-    splittingWith = request.form.get('splittingWith')
-    splittingWith += f", {current_user.username}"
+    splittingWith = request.form.get('splittingWith')  
+    splittingWith += f",{current_user.username}"
     splittingWithSeparated = splittingWith.split(',')
     for user in splittingWithSeparated:
-        db.session.add(Bills(name,amount,user,splittingWith,False))
+        db.session.add(Bills(name, amount, user, splittingWith, False, False))
         db.session.commit()
-    db.session.add(Bills(name,amount,current_user.username,splittingWith,False))
+    return redirect('/toDoList')
+
+@app.route('/toDoList', methods=['GET'])
+def toDo():
+    if not current_user.is_authenticated:
+        return redirect('/login')
+    users = User.query.all() # might be the issue
+    bills = Bills.query.filter_by(user_id=current_user.username)
+    return render_template('toDoList.html', users=users, bills=bills)
+
+@app.route('/toDoListAPI', methods=['POST'])
+def toDoAPI():
+    if not current_user.is_authenticated:
+        return redirect('/login')
+    name = request.form.get('billToChange')
+    bill = Bills.query.filter_by(name=name).first()
+    print(f"Bill name: {name}. Completed: {bill.user_completion} and bill: {bill}")
+    bill.user_completion = True
     db.session.commit()
     return redirect('/toDoList')
 
-@app.route('/toDoList',methods=['GET'])
-def toDo():
-    if current_user.is_authenticated:
-        pass
-    else:
-        return redirect('/login')
-    users = User.query.all() #might be the issue
-    bills = Bills.query.filter_by(user_id = current_user.username)
-    return render_template('toDoList.html', users=users,bills=bills)
-@app.route('/toDoListAPI',methods=['POST'])
-def toDoAPI():
-    if current_user.is_authenticated:
-        pass
-    else:
-        return redirect('/login')
-    if (request.form.get('paid') is Checked) && request.from.get('paid') == '1' : #TODO Figure out how to check checkboxes are ticked or not
-        current_user.us

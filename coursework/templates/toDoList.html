@@ -6,19 +6,28 @@
 
 {% block body %}
     <div class="content">
-        <h1>Bills:</h1>
         <table>
             <thead>
                 <tr>
-                    <th width='2000px'>All Bills</th>
+                    <th width='2000px'>All Bills for {{current_user.username}}</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody> 
                 {% for entry in bills %}
                 <tr>
-                    <td>{{entry.name}} amount:{{entry.amount}} All Paid:{{entry.completion}} Shared with:{{entry.users_with_bill}} Paid:
-                        <form action="/toDoListAPI">
-                        <input type="checkbox" id="Paid" name="paid" value="Paid"> </td> 
+                    <td>{{entry.name}} amount:{{entry.amount}} Payment Completed:{{entry.completion}} Shared with:{{entry.shared_with}}. Paid:{{entry.user_completion}} 
+                        {% if entry.user_completion == False %}
+                            <form action="/toDoListAPI" method='POST'>
+                                <label for="Paid">
+                                        <button class="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow"
+                                        type = "submit" value = "paid? "id="userPaid" name="userPaid"> 
+                                            paid? 
+                                        </button>
+                                    <input type="hidden" name="billToChange" value="{{entry.name}}">
+                                </label>
+                            </form>
+                        {% endif %}
+                    </td> 
                 </tr>
                 {% else %}
                 <tr>

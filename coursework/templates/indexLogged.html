@@ -7,7 +7,7 @@
 
 {% block body %}
     <div class="centre">
-        <h1>Welcome!</h1>
+        <h1>Welcome {{current_user.username}}!</h1>
         <p>Here you will be able to create your own to-do list, choose an option to continue</p>
         <br>
         <form action='/toDoList'> 

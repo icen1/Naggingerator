@@ -31,16 +31,18 @@ class Bills(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text())
     amount = db.Column(db.Integer())
+    shared_with = db.Column(db.Text())
     user_id = db.Column(db.Integer(), db.ForeignKey('users.id'))  # this ought to be a "foreign key"
-    users_with_bill = db.Column(db.Text(), db.ForeignKey('users.id'))
-    completion= db.Column(db.Boolean,db.ForeignKey('bills.id'),db.ForeignKey('users.id'))
+    completion= db.Column(db.Boolean)
+    user_completion= db.Column(db.Boolean)
 
-    def __init__(self, name,amount, user_id,users_with_bill, completion):
+    def __init__(self, name,amount, user_id,shared_with, completion,user_completion):
         self.name=name
         self.amount = amount
         self.user_id = user_id
-        self.users_with_bill = users_with_bill
+        self.shared_with = shared_with
         self.completion = completion
+        self.user_completion=user_completion
 # put some data into the tables
 def dbinit():
     # commit all the changes to the database file
