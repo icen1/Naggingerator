@@ -17,6 +17,9 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(20), unique=True)
     password_hash = db.Column(db.String(30))
     bills = db.relationship('Bills', backref='user', lazy='dynamic')
+    bill_completion = db.relationship('User_Bill', backref='User_completion', lazy='dynamic')
+    notfications = db.relationship('Notfications', backref='user_notfications', lazy='dynamic')
+    house_members = db.relationship('Households', backref='house_members', lazy='dynamic')
     email = db.Column(db.String(30))
 
     def __init__(self, username, password_hash, email):  
@@ -34,15 +37,51 @@ class Bills(db.Model):
     shared_with = db.Column(db.Text())
     user_id = db.Column(db.Integer(), db.ForeignKey('users.id'))  # this ought to be a "foreign key"
     completion= db.Column(db.Boolean)
-    user_completion= db.Column(db.Boolean)
+    bill_completion = db.relationship('User_Bill', backref='bills_completion', lazy='dynamic')
 
-    def __init__(self, name,amount, user_id,shared_with, completion,user_completion):
+
+    def __init__(self, name,amount, user_id,shared_with, completion):
         self.name=name
         self.amount = amount
         self.user_id = user_id
         self.shared_with = shared_with
         self.completion = completion
-        self.user_completion=user_completion
+
+class User_Bill(db.Model):
+    __tablename__ = 'completion'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer(), db.ForeignKey('users.id'))
+    bill_id = db.Column(db.Integer(), db.ForeignKey('bills.id'))
+    user_bill_completion= db.Column(db.Boolean)
+
+    def __init__(self,user_id,bill_id,user_bill_completion):
+        self.user_id = user_id
+        self.bill_id = bill_id
+        self.user_bill_completion = user_bill_completion
+
+class Notfications(db.Model):
+    __tablename__ = 'notfications'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer(), db.ForeignKey('users.id'))
+    notfication =db.Column(db.Text())
+
+    def __init__(self,user_id,notfication):
+        self.user_id = user_id
+        self.notfication = notfication
+
+class Households(db.Model):
+    __tablename__ = 'households'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer(), db.ForeignKey('users.id'))
+    name = db.Column(db.Text())
+    members = db.Column(db.Text())
+        
+    def __init__(self,user_id,name,members):
+        self.user_id = user_id
+        self.name = name
+        self.members = members
+
+
 # put some data into the tables
 def dbinit():
     # commit all the changes to the database file

@@ -17,7 +17,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 app.config['SECRET_KEY'] ="BryanPeopleSecretKey"
 safe_string = escape ("escape?")
 # set up a 'model' for the data you want to store
-from db_schema import db, User, Bills, dbinit 
+from db_schema import db, User, Bills,User_Bill, dbinit 
 from flask_login import LoginManager, login_user, current_user, logout_user, UserMixin
 
 # init the database so it can connect with our app
@@ -61,6 +61,7 @@ def logAPI():
     password = request.form.get('password')
 
     # find the users with this name
+    print(f"Name before user: {name}")
     user = User.query.filter_by(username=name).first() #Might be the issue
     print(f"HELLO: {name} {user} a {user.password_hash} a {password}")
     if user is None:
@@ -128,8 +129,14 @@ def createAPI():
     splittingWith = request.form.get('splittingWith')  
     splittingWith += f",{current_user.username}"
     splittingWithSeparated = splittingWith.split(',')
+    bill = Bills.query.filter_by(name=name).first()
     for user in splittingWithSeparated:
-        db.session.add(Bills(name, amount, user, splittingWith, False, False))
+        username_to_id = User.query.filter_by(username=user).first().id
+        print(f"username to id {username_to_id}")
+        db.session.add(Bills(name, amount, username_to_id, splittingWith, False))
+        db.session.commit()
+        bill_add = Bills.query.filter_by(name=name,user_id=username_to_id).first()
+        db.session.add(User_Bill(username_to_id,bill_add.id,False))
         db.session.commit()
     return redirect('/toDoList')
 
@@ -138,17 +145,24 @@ def toDo():
     if not current_user.is_authenticated:
         return redirect('/login')
     users = User.query.all() # might be the issue
-    bills = Bills.query.filter_by(user_id=current_user.username)
-    return render_template('toDoList.html', users=users, bills=bills)
+    bills = Bills.query.filter_by(user_id=current_user.id).all()
+    user_bills = []
+    for bill in bills:
+        user_bills += User_Bill.query.filter_by(bill_id=bill.id).all()
+    print(user_bills)
+    return render_template('toDoList.html', users=users, bills=bills,user_bills=user_bills)
+    
 
 @app.route('/toDoListAPI', methods=['POST'])
 def toDoAPI():
     if not current_user.is_authenticated:
         return redirect('/login')
-    name = request.form.get('billToChange')
-    bill = Bills.query.filter_by(name=name).first()
-    print(f"Bill name: {name}. Completed: {bill.user_completion} and bill: {bill}")
-    bill.user_completion = True
+    bill_id = request.form.get('billToChange')
+    bill = Bills.query.filter_by(user_id=current_user.id,id=bill_id).first()
+    print(f"Bill id: {bill_id}. user id: {current_user.id} and bill: {bill} and bill id again {bill.id}")
+    user_bill = User_Bill.query.filter_by(user_id=current_user.id,bill_id = bill.id).first()
+    print(f"User_bill: {user_bill}")
+    user_bill.user_bill_completion = True
     db.session.commit()
     return redirect('/toDoList')
 

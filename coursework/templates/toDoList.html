@@ -13,20 +13,22 @@
                 </tr>
             </thead>
             <tbody> 
+                {% set count = namespace(value=0) %}
                 {% for entry in bills %}
                 <tr>
-                    <td>{{entry.name}} amount:{{entry.amount}} Payment Completed:{{entry.completion}} Shared with:{{entry.shared_with}}. Paid:{{entry.user_completion}} 
-                        {% if entry.user_completion == False %}
+                    <td>{{entry.name}} amount:{{entry.amount}} Payment Completed:{{entry.completion}} Shared with:{{entry.shared_with}}. Paid: {{user_bills[count.value].user_bill_completion}}
+                            {% if user_bills[count.value].user_bill_completion==False %}
                             <form action="/toDoListAPI" method='POST'>
                                 <label for="Paid">
                                         <button class="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow"
                                         type = "submit" value = "paid? "id="userPaid" name="userPaid"> 
                                             paid? 
                                         </button>
-                                    <input type="hidden" name="billToChange" value="{{entry.name}}">
+                                    <input type="hidden" name="billToChange" value={{entry.id}}>
                                 </label>
                             </form>
-                        {% endif %}
+                            {% endif %}
+                            {% set count.value = count.value + 1 %}
                     </td> 
                 </tr>
                 {% else %}

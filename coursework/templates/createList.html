@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'base1.html' %}
 
 {% block head %}
 <title>Create a bill</title>
@@ -15,15 +15,18 @@
     <input name="amount" placeholder="100£" id="bill_amount" required>
     <br>
     <br>
-    <label>Splitting with: </label>
-    <input name="splittingWith" list="SplittingWith" placeholder="John Smith" id="bill_splitWith">
+    <label>Splitting with user: </label>
+    <input name="splittingWithUsername" list="SplittingWith" placeholder="John Smith" id="bill_splitWith">
     <datalist id="SplittingWith">
         {% for entry in users %}
-            <option>{{entry.name}}</<option>>
+            <option>{{entry.username}}</<option>>
         {% else %}
             <option>no entries</option>
         {% endfor %}
     </datalist>
+    <label>Splitting with House: </label>
+    <input name="splittingWithHousehold" list="SplittingWithHousehold" placeholder="House of Lancaster" id="bill_splitWithHouse">
+
     <br>
     <br>
     <button

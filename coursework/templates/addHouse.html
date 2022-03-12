@@ -1,0 +1,28 @@
+{% extends 'base1.html' %}
+
+{% block head %}
+<title>Add House</title> 
+{% endblock %}
+
+{% block body %} 
+        <div class="centre">
+            Houses: <br>
+            {% for house in houses %}
+                House name: {{house.name}} and the house members: {{house.members}}
+            {% else %}
+                Not part of any houses
+            {% endfor %}
+            <br>
+            <br>
+            Add House:
+            <br>
+            <form action='/addHouseAPI' method ='POST'>
+            <p><label for="housename">House name:</label> <input type = "text" name = "house name" placeholder="House of Lancaster" required/></p>
+            <br>
+            <p><label for="housename">members usernames:</label> <input type = "text" name = "members" placeholder="John,Cameron" required/></p>
+                <br>
+                <p><button class="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow"
+                    type = "submit" value = "Create Account"/> Create House </button></p>
+            </form>
+        </div>
+{% endblock %}
