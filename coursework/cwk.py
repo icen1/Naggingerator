@@ -126,7 +126,7 @@ def createAPI():
         return redirect('/login')
     name = request.form.get('name')
     amount = request.form.get('amount')
-    splittingWith = request.form.get('splittingWith')  
+    splittingWith = request.form.get('splittingWithUsername')  
     splittingWith += f",{current_user.username}"
     splittingWithSeparated = splittingWith.split(',')
     bill = Bills.query.filter_by(name=name).first()
@@ -158,11 +158,18 @@ def toDoAPI():
     if not current_user.is_authenticated:
         return redirect('/login')
     bill_id = request.form.get('billToChange')
-    bill = Bills.query.filter_by(user_id=current_user.id,id=bill_id).first()
-    print(f"Bill id: {bill_id}. user id: {current_user.id} and bill: {bill} and bill id again {bill.id}")
-    user_bill = User_Bill.query.filter_by(user_id=current_user.id,bill_id = bill.id).first()
-    print(f"User_bill: {user_bill}")
+    bill = Bills.query.filter_by(id=bill_id).first()
+    user_bill = User_Bill.query.filter_by(user_id=current_user.id,bill_id = bill_id).first()
     user_bill.user_bill_completion = True
     db.session.commit()
-    return redirect('/toDoList')
-
+    splittingWithUsers = request.form.get('splittingWithUsers')
+    for user in splittingWithUsers.split(','):
+        user_id = User.query.filter_by(username=user).first().id
+        user_bill = User_Bill.query.filter_by(user_id=user_id,bill_id = bill_id).first()
+        if user_bill is not True:
+            return redirect('/toDoList')
+    
+    for user in splittingWithUsers.split(','):
+        bill = Bills.query.filter_by(user_id=user,name=bill.name).first()
+        print(f"Bill: {bill}")
+        bill.completion = True
