@@ -1,5 +1,7 @@
 # import SQLAlchemy
+from crypt import methods
 import email
+from email import message
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from werkzeug import security
@@ -44,9 +46,18 @@ def load_user(user_id):
 def index():
     return render_template('index.html')
 
-@app.route('/indexLogged') 
+@app.route('/indexLogged',methods=['GET']) 
 def indexLogged():
-    return render_template('indexLogged.html')
+    notfications = Notfications.query.filter_by(user_id=current_user.id)
+    return render_template('indexLogged.html',notfications=notfications)
+
+@app.route('/indexLoggedAPI',methods=['POST']) 
+def indexLoggedAPI():
+    notfication_id = request.form.get('notfication_id')
+    notfication = Notfications.query.filter_by(id=notfication_id).first()
+    db.session.delete(notfication)
+    db.session.commit()
+    return redirect('/indexLogged')
 
 @app.route('/login', methods=['GET'])
 def log():
@@ -69,7 +80,7 @@ def logAPI():
 
     # good, so log in the user
     login_user(user)
-    return redirect('/toDoList')
+    return redirect('/indexLogged')
 
 @app.route('/logout')
 def logout():
@@ -129,7 +140,7 @@ def addHouseAPI():
         username_to_id = User.query.filter_by(username=member).first().id
         db.session.add(Households(username_to_id,house_name,house_members,len(house_members_list)))
         db.session.commit()
-    return redirect('/toDoList')
+    return redirect('/indexLogged')
 
 @app.route('/createList', methods=['GET'])
 def create():
@@ -146,22 +157,28 @@ def createAPI():
     amount = request.form.get('amount')
     splittingWith_house = request.form.get("splittingWithHousehold")
     splittingWith_house_separated = splittingWith_house.split(',')
+    print(f"House names: {splittingWith_house}")
     splittingWith_users = request.form.get('splittingWithUsername')
     bill = Bills.query.filter_by(name=name).first()
     for house in splittingWith_house_separated:
-        users_in_house =Households.query.first()
+        users_in_house =Households.query.filter_by(name=house).first()
         print(f"House number: {users_in_house} name of house: {house} ")
         splittingWith_users +=f",{users_in_house.members}" 
     splittingWith_users_separated = splittingWith_users.split(',')
     number_of_users_to_split_with = len(splittingWith_users_separated)
     for user in splittingWith_users_separated:
-        username_to_id = User.query.filter_by(username=user).first().id
-        db.session.add(Bills(name, int(amount)/number_of_users_to_split_with, username_to_id,splittingWith_users, False))
-        db.session.commit()
-        print(f"name of bill: {name} and user_name_to_id: {username_to_id}")
-        bill_add = Bills.query.filter_by(name=name,user_id=username_to_id).first()
-        db.session.add(User_Bill(username_to_id,bill_add.id,False))
-        db.session.commit()
+        if user is not '':
+            print(f"Username: {user}. Users separated: {splittingWith_users_separated} and just Users: {splittingWith_users}")
+            username_to_id = User.query.filter_by(username=user).first().id
+            db.session.add(Bills(name, int(amount)/number_of_users_to_split_with, username_to_id,splittingWith_users, False))
+            db.session.commit()
+            message = f"{current_user.username} added you to the bill '{name}' which ammounts to {amount}. You have to pay {int(amount)/number_of_users_to_split_with}"
+            db.session.add(Notfications(username_to_id,message))
+            db.session.commit()
+            print(f"name of bill: {name} and user_name_to_id: {username_to_id}")
+            bill_add = Bills.query.filter_by(name=name,user_id=username_to_id).first()
+            db.session.add(User_Bill(username_to_id,bill_add.id,False))
+            db.session.commit()
     return redirect('/toDoList')
 
 @app.route('/toDoList', methods=['GET'])
@@ -187,10 +204,19 @@ def toDoAPI():
     print(f"User_id = {current_user.id} and bill_id = {bill_id} and bill = {bill}")
     user_bill = User_Bill.query.filter_by(user_id=current_user.id,bill_id = bill_id).first()
     user_bill.user_bill_completion = True
-    db.session.commit()
     splittingWithUsers = request.form.get('splittingWithUsers')
     splittingWithUsers_separated = splittingWithUsers.split(',')
-    print(f"Splitting with users: {splittingWithUsers}")
+    print(f"Splitting with users: {splittingWithUsers_separated}")
+    if '' in splittingWithUsers_separated:
+        splittingWithUsers_separated.remove('')
+
+    for user in splittingWithUsers_separated:
+        if user != current_user.username:
+            username_to_id = User.query.filter_by(username=user).first().id
+            message = f"{current_user.username} paid their share for {bill.name} which ammounted to {bill.amount}. "
+            db.session.add(Notfications(username_to_id,message))
+            db.session.commit()
+
     for user in splittingWithUsers_separated:
         print(f"User: {user}")
         user_id = User.query.filter_by(username=user).first().id
