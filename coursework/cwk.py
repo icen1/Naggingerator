@@ -144,14 +144,21 @@ def createAPI():
         return redirect('/login')
     name = request.form.get('name')
     amount = request.form.get('amount')
-    splittingWith = request.form.get('splittingWithUsername')  
-    splittingWith += f",{current_user.username}"
-    splittingWithSeparated = splittingWith.split(',')
+    splittingWith_house = request.form.get("splittingWithHousehold")
+    splittingWith_house_separated = splittingWith_house.split(',')
+    splittingWith_users = request.form.get('splittingWithUsername')
     bill = Bills.query.filter_by(name=name).first()
-    for user in splittingWithSeparated:
+    for house in splittingWith_house_separated:
+        users_in_house =Households.query.first()
+        print(f"House number: {users_in_house} name of house: {house} ")
+        splittingWith_users +=f",{users_in_house.members}" 
+    splittingWith_users_separated = splittingWith_users.split(',')
+    number_of_users_to_split_with = len(splittingWith_users_separated)
+    for user in splittingWith_users_separated:
         username_to_id = User.query.filter_by(username=user).first().id
-        db.session.add(Bills(name, amount, username_to_id, splittingWith, False))
+        db.session.add(Bills(name, int(amount)/number_of_users_to_split_with, username_to_id,splittingWith_users, False))
         db.session.commit()
+        print(f"name of bill: {name} and user_name_to_id: {username_to_id}")
         bill_add = Bills.query.filter_by(name=name,user_id=username_to_id).first()
         db.session.add(User_Bill(username_to_id,bill_add.id,False))
         db.session.commit()
@@ -177,6 +184,7 @@ def toDoAPI():
     complete = True
     bill_id = request.form.get('billToChange')
     bill = Bills.query.filter_by(id=bill_id).first()
+    print(f"User_id = {current_user.id} and bill_id = {bill_id} and bill = {bill}")
     user_bill = User_Bill.query.filter_by(user_id=current_user.id,bill_id = bill_id).first()
     user_bill.user_bill_completion = True
     db.session.commit()
