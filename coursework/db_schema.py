@@ -75,11 +75,13 @@ class Households(db.Model):
     user_id = db.Column(db.Integer(), db.ForeignKey('users.id'))
     name = db.Column(db.Text())
     members = db.Column(db.Text())
+    number_of_members = db.Column(db.Integer())
         
-    def __init__(self,user_id,name,members):
+    def __init__(self,user_id,name,members,number_of_members):
         self.user_id = user_id
         self.name = name
         self.members = members
+        self.number_of_members = number_of_members
 
 
 # put some data into the tables

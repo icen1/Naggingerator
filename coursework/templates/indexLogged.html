@@ -21,7 +21,13 @@
                 Create list
             </button>
         </form>
-        <br/>
+        <br>
+        <form action='/addHouse'> 
+            <button class="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow">
+                Add house
+            </button>
+        </form>
+        <br>
         <h3>Notfications you received:</h3>
         {% for notfication in notfications %}
             {{ notfication.notfication }}

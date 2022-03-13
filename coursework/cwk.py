@@ -17,7 +17,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 app.config['SECRET_KEY'] ="BryanPeopleSecretKey"
 safe_string = escape ("escape?")
 # set up a 'model' for the data you want to store
-from db_schema import db, User, Bills,User_Bill, Notfications, dbinit 
+from db_schema import Households, db, User, Bills,User_Bill, Notfications, dbinit 
 from flask_login import LoginManager, login_user, current_user, logout_user, UserMixin
 
 # init the database so it can connect with our app
@@ -89,26 +89,43 @@ def reg():
 def regAPI():
     if current_user.is_authenticated:
         return redirect('/login')
+    username = request.form.get('username')
+    password = request.form.get('password')
+    email = request.form.get('email')
+    username = escape(username)
+    email = escape(email)
 
-    if request.method == "POST":
-        username = request.form.get('username')
-        password = request.form.get('password')
-        email = request.form.get('email')
-        username = escape(username)
-        email = escape(email)
+    password_hash=security.generate_password_hash(password)
+    # create a user with this name and hashed password
+    # still not secure unless using HTTPS 
 
-        password_hash=security.generate_password_hash(password)
-        # create a user with this name and hashed password
-        # still not secure unless using HTTPS 
+    try:
+        newuser = User(username=username, password_hash=password_hash, email=email)
+        db.session.add(newuser)
+        db.session.commit()
+    except IntegrityError as exc:
+        db.session.rollback()
+        return f"could not register {exc}"
+    return redirect('/login')
 
-        try:
-            newuser = User(username=username, password_hash=password_hash, email=email)
-            db.session.add(newuser)
-            db.session.commit()
-        except IntegrityError as exc:
-            db.session.rollback()
-            return f"could not register {exc}"
+@app.route('/addHouse',methods=['GET'])
+def addHouse():
+    if not current_user.is_authenticated:
         return redirect('/login')
+    houses = Households.query.filter_by(user_id=current_user.id)
+    return render_template("addHouse.html",houses=houses)
+
+@app.route('/addHouseAPI',methods=['POST'])
+def addHouseAPI():
+    if not current_user.is_authenticated:
+        return redirect('/login')
+    house_name = request.form.get('house name')
+    house_members = request.form.get('members')
+    house_members += f",{current_user.username}"
+    house_members_list = house_members.split(',')
+    for member in house_members:
+        username_to_id = User.query.filter_by(username=member).first().id
+        db.session.add(Households(username_to_id,house_name,house_members,len(house_members_list)))
 
 @app.route('/createList', methods=['GET'])
 def create():
