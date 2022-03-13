@@ -18,7 +18,7 @@
                 <tr>
                     <td>{{entry.name}} amount:{{entry.amount}} Payment Completed:{{entry.completion}} Shared with:{{entry.shared_with}}. Paid: {{user_bills[count.value].user_bill_completion}}
                             {% if user_bills[count.value].user_bill_completion==False %}
-                            <form action="/toDoListAPI" method='POST'>
+                            <form action="/BillsAPI" method='POST'>
                                 <label for="Paid">
                                         <button class="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow"
                                         type = "submit" value = "paid? "id="userPaid" name="userPaid"> 
@@ -42,7 +42,7 @@
         </table>
         <br>
     <br>
-        <form action='/createList'> 
+        <form action='/createBill'> 
             <button class="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow">
                 Add Bill
             </button>

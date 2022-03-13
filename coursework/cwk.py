@@ -37,20 +37,23 @@ if resetdb:
 login_manager = LoginManager()
 login_manager.init_app(app)
 
+# Manages login and loads the user.
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id)) # Might be the issue
+    return User.query.get(int(user_id))
 
-#route to the index
+# route to the main index page
 @app.route('/') 
 def index():
     return render_template('index.html')
 
+# route to the index page when logged in. returns all notfications to it so it can be displayed.
 @app.route('/indexLogged',methods=['GET']) 
 def indexLogged():
     notfications = Notfications.query.filter_by(user_id=current_user.id)
     return render_template('indexLogged.html',notfications=notfications)
 
+# Handles the deletion of notfications from the logged index page.
 @app.route('/indexLoggedAPI',methods=['POST']) 
 def indexLoggedAPI():
     notfication_id = request.form.get('notfication_id')
@@ -59,13 +62,15 @@ def indexLoggedAPI():
     db.session.commit()
     return redirect('/indexLogged')
 
+# Checks if the user is logged in or not. Redirects to the appropriate page if so.
 @app.route('/login', methods=['GET'])
 def log():
     if current_user.is_authenticated:
-        return redirect('/toDoList')
+        return redirect('/indexLogged')
     else:
         return render_template("login.html")
 
+# Handles logging in the user if the username and password is correct. if not redirects them to the login page.
 @app.route('/loginAPI', methods=['POST'])
 def logAPI():
     name = request.form.get('username')
@@ -82,6 +87,7 @@ def logAPI():
     login_user(user)
     return redirect('/indexLogged')
 
+# Handles logging out of the user
 @app.route('/logout')
 def logout():
     if not current_user.is_authenticated:
@@ -89,6 +95,7 @@ def logout():
     logout_user()
     return redirect('/')
 
+# Checks if the user is authenticated and redirects them to the login page if so. Otherwise it stays on the register page.
 @app.route('/register', methods=['GET'])
 def reg():
     if current_user.is_authenticated:
@@ -96,6 +103,7 @@ def reg():
 
     return render_template("register.html")
 
+# Handles the backend of registering. Storing the username, email and password. Hashes the password for safety as well.
 @app.route('/registerAPI', methods=['POST'])
 def regAPI():
     if current_user.is_authenticated:
@@ -106,10 +114,10 @@ def regAPI():
     username = escape(username)
     email = escape(email)
 
-    password_hash=security.generate_password_hash(password)
     # create a user with this name and hashed password
-    # still not secure unless using HTTPS 
+    password_hash=security.generate_password_hash(password)
 
+    # Tries to add the user, if not this means the user exists and rolls back. Redirects to the login page if the addition is successful
     try:
         newuser = User(username=username, password_hash=password_hash, email=email)
         db.session.add(newuser)
@@ -119,6 +127,7 @@ def regAPI():
         return f"could not register {exc}"
     return redirect('/login')
 
+# Filters the houses that the user is part of so it can be shown to them
 @app.route('/addHouse',methods=['GET'])
 def addHouse():
     if not current_user.is_authenticated:
@@ -126,6 +135,7 @@ def addHouse():
     houses = Households.query.filter_by(user_id=current_user.id)
     return render_template("addHouse.html",houses=houses)
 
+# Adds the current user and the users in the returned form to a house with the assigned name
 @app.route('/addHouseAPI',methods=['POST'])
 def addHouseAPI():
     if not current_user.is_authenticated:
@@ -142,14 +152,25 @@ def addHouseAPI():
         db.session.commit()
     return redirect('/indexLogged')
 
-@app.route('/createList', methods=['GET'])
+# Filters the bills that the user is part of and returns it
+@app.route('/createBill', methods=['GET'])
 def create():
     if not current_user.is_authenticated:
         return redirect('/login')
     users = User.query.all() 
-    return render_template('createList.html',users=users)
+    return render_template('createBill.html',users=users)
 
-@app.route('/createListAPI', methods=['POST'])
+''' 
+Handles the backend for creating bills. It takes in the user names of the 
+people/household that the bill will be split between. If there are any users it
+will add them to a string. If a household is inserted as well, it will go through 
+all the household members and add them to the same string to the users. It will 
+then split them to a list of users using and go through every non empty one of them
+and add the bill, its notfication and the state of each user in the bill. 
+It then redirects to /Bills where the user can find their new bill added if they
+were in the user list or part of the household.
+'''
+@app.route('/createBillAPI', methods=['POST'])
 def createAPI():
     if not current_user.is_authenticated:
         return redirect('/login')
@@ -179,10 +200,11 @@ def createAPI():
             bill_add = Bills.query.filter_by(name=name,user_id=username_to_id).first()
             db.session.add(User_Bill(username_to_id,bill_add.id,False))
             db.session.commit()
-    return redirect('/toDoList')
+    return redirect('/Bills')
 
-@app.route('/toDoList', methods=['GET'])
-def toDo():
+# Filters the bills of the current user and its state and sends it to the page to be displayed
+@app.route('/Bills', methods=['GET'])
+def bill():
     if not current_user.is_authenticated:
         return redirect('/login')
     users = User.query.all() # might be the issue
@@ -190,11 +212,20 @@ def toDo():
     user_bills = []
     for bill in bills:
         user_bills += User_Bill.query.filter_by(bill_id=bill.id).all()
-    return render_template('toDoList.html', users=users, bills=bills,user_bills=user_bills)
+    return render_template('Bills.html', users=users, bills=bills,user_bills=user_bills)
     
-
-@app.route('/toDoListAPI', methods=['POST'])
-def toDoAPI():
+'''
+Performs the backend of setting the bill as paid by one user and checks whether
+the whole payment is pending or complete (Flase/True respectively). It does this
+by getting the bill id and whether the user already paid for the bill or not by 
+filtering it from the database. It sets that value as true as we are only routed 
+to it if the user decides to pay the bill. It then gets everyone else in the bill
+and send the notfication thst the current user paid for their part of the bill.
+it then checks if all the user paid or not, if they did then it will change the
+transcation to completed from pending (True/False).
+'''
+@app.route('/BillsAPI', methods=['POST'])
+def BillsAPI():
     if not current_user.is_authenticated:
         return redirect('/login')
     
@@ -205,8 +236,9 @@ def toDoAPI():
     user_bill = User_Bill.query.filter_by(user_id=current_user.id,bill_id = bill_id).first()
     user_bill.user_bill_completion = True
     splittingWithUsers = request.form.get('splittingWithUsers')
+    print(f"Splitting with users: {splittingWithUsers}")
     splittingWithUsers_separated = splittingWithUsers.split(',')
-    print(f"Splitting with users: {splittingWithUsers_separated}")
+    print(f"Splitting with users sep: {splittingWithUsers_separated}")
     if '' in splittingWithUsers_separated:
         splittingWithUsers_separated.remove('')
 
@@ -235,4 +267,4 @@ def toDoAPI():
             bill.completion = True
             db.session.commit()
             print(f"bill completion: {bill.completion}")
-    return redirect('/toDoList')
+    return redirect('/Bills')
