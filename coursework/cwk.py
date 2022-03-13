@@ -17,7 +17,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 app.config['SECRET_KEY'] ="BryanPeopleSecretKey"
 safe_string = escape ("escape?")
 # set up a 'model' for the data you want to store
-from db_schema import db, User, Bills,User_Bill, dbinit 
+from db_schema import db, User, Bills,User_Bill, Notfications, dbinit 
 from flask_login import LoginManager, login_user, current_user, logout_user, UserMixin
 
 # init the database so it can connect with our app
@@ -61,9 +61,7 @@ def logAPI():
     password = request.form.get('password')
 
     # find the users with this name
-    print(f"Name before user: {name}")
     user = User.query.filter_by(username=name).first() #Might be the issue
-    print(f"HELLO: {name} {user} a {user.password_hash} a {password}")
     if user is None:
         return redirect('/')
     if not security.check_password_hash(user.password_hash, password):
@@ -110,7 +108,6 @@ def regAPI():
         except IntegrityError as exc:
             db.session.rollback()
             return f"could not register {exc}"
-        flash("registered succesfully, now log in")
         return redirect('/login')
 
 @app.route('/createList', methods=['GET'])
@@ -132,7 +129,6 @@ def createAPI():
     bill = Bills.query.filter_by(name=name).first()
     for user in splittingWithSeparated:
         username_to_id = User.query.filter_by(username=user).first().id
-        print(f"username to id {username_to_id}")
         db.session.add(Bills(name, amount, username_to_id, splittingWith, False))
         db.session.commit()
         bill_add = Bills.query.filter_by(name=name,user_id=username_to_id).first()
@@ -149,7 +145,6 @@ def toDo():
     user_bills = []
     for bill in bills:
         user_bills += User_Bill.query.filter_by(bill_id=bill.id).all()
-    print(user_bills)
     return render_template('toDoList.html', users=users, bills=bills,user_bills=user_bills)
     
 
@@ -157,19 +152,32 @@ def toDo():
 def toDoAPI():
     if not current_user.is_authenticated:
         return redirect('/login')
+    
+    complete = True
     bill_id = request.form.get('billToChange')
     bill = Bills.query.filter_by(id=bill_id).first()
     user_bill = User_Bill.query.filter_by(user_id=current_user.id,bill_id = bill_id).first()
     user_bill.user_bill_completion = True
     db.session.commit()
     splittingWithUsers = request.form.get('splittingWithUsers')
-    for user in splittingWithUsers.split(','):
+    splittingWithUsers_separated = splittingWithUsers.split(',')
+    print(f"Splitting with users: {splittingWithUsers}")
+    for user in splittingWithUsers_separated:
+        print(f"User: {user}")
         user_id = User.query.filter_by(username=user).first().id
-        user_bill = User_Bill.query.filter_by(user_id=user_id,bill_id = bill_id).first()
-        if user_bill is not True:
-            return redirect('/toDoList')
-    
-    for user in splittingWithUsers.split(','):
-        bill = Bills.query.filter_by(user_id=user,name=bill.name).first()
-        print(f"Bill: {bill}")
-        bill.completion = True
+        bill = Bills.query.filter_by(user_id=user_id,name=bill.name).first()
+        print(f"User id {user_id} and bill id: {bill_id}")
+        user_bill = User_Bill.query.filter_by(user_id=user_id,bill_id = bill.id).first()
+        print(f"User bill completion: {user_bill.user_bill_completion}")
+        if user_bill.user_bill_completion is False:
+            print(f"Not true")
+            complete = False
+    for user in splittingWithUsers_separated:
+        if complete:
+            print(f"Bill: {bill}")
+            user_id = User.query.filter_by(username=user).first().id
+            bill = Bills.query.filter_by(user_id=user_id,name=bill.name).first()
+            bill.completion = True
+            db.session.commit()
+            print(f"bill completion: {bill.completion}")
+    return redirect('/toDoList')
