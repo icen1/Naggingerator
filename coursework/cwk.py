@@ -123,9 +123,13 @@ def addHouseAPI():
     house_members = request.form.get('members')
     house_members += f",{current_user.username}"
     house_members_list = house_members.split(',')
-    for member in house_members:
+    print(f"House name: {house_name} Members: {house_members}")
+    for member in house_members_list:
+        print(f"Member name: {member}")
         username_to_id = User.query.filter_by(username=member).first().id
         db.session.add(Households(username_to_id,house_name,house_members,len(house_members_list)))
+        db.session.commit()
+    return redirect('/toDoList')
 
 @app.route('/createList', methods=['GET'])
 def create():
