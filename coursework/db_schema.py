@@ -29,7 +29,7 @@ class User(UserMixin, db.Model):
         self.email=email
 
 # a model of a list for the database
-# it refers to a user
+# it refers to a Bills
 class Bills(db.Model):
     __tablename__='bills'
     id = db.Column(db.Integer, primary_key=True)
@@ -48,6 +48,7 @@ class Bills(db.Model):
         self.shared_with = shared_with
         self.completion = completion
 
+# a table that refers to each user completion of a bill
 class User_Bill(db.Model):
     __tablename__ = 'completion'
     id = db.Column(db.Integer, primary_key=True)
@@ -60,6 +61,7 @@ class User_Bill(db.Model):
         self.bill_id = bill_id
         self.user_bill_completion = user_bill_completion
 
+# a table that refers to the notfication sent to users
 class Notfications(db.Model):
     __tablename__ = 'notfications'
     id = db.Column(db.Integer, primary_key=True)
@@ -70,6 +72,7 @@ class Notfications(db.Model):
         self.user_id = user_id
         self.notfication = notfication
 
+# a table that refers to the households and their members
 class Households(db.Model):
     __tablename__ = 'households'
     id = db.Column(db.Integer, primary_key=True)
