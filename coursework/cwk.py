@@ -25,6 +25,9 @@ from flask_login import LoginManager, login_user, current_user, logout_user, Use
 # init the database so it can connect with our app
 db.init_app(app)
 
+# Determine user_bill completion
+complete = True
+
 # change this to False to avoid resetting the database every time this app is restarted
 resetdb = False
 if resetdb:
@@ -79,7 +82,7 @@ def logAPI():
     # find the users with this name
     user = User.query.filter_by(username=name).first() #Might be the issue
     if user is None:
-        return redirect('/')
+        return redirect('/login')
     if not security.check_password_hash(user.password_hash, password):
         return redirect('/login')
 
@@ -182,11 +185,15 @@ def createAPI():
     splittingWith_users = request.form.get('splittingWithUsername')
     bill = Bills.query.filter_by(name=name).first()
     for house in splittingWith_house_separated:
-        users_in_house =Households.query.filter_by(name=house).first()
-        print(f"House number: {users_in_house} name of house: {house} ")
-        splittingWith_users +=f",{users_in_house.members}" 
+        if house != '':
+            users_in_house =Households.query.filter_by(name=house).first()
+            print(f"House number: {users_in_house} name of house: {house} ")
+            splittingWith_users +=f",{users_in_house.members}" 
     splittingWith_users_separated = splittingWith_users.split(',')
     number_of_users_to_split_with = len(splittingWith_users_separated)
+    for element in splittingWith_users_separated:
+        if element == '':
+            number_of_users_to_split_with -= 1
     for user in splittingWith_users_separated:
         if user is not '':
             print(f"Username: {user}. Users separated: {splittingWith_users_separated} and just Users: {splittingWith_users}")
@@ -207,7 +214,7 @@ def createAPI():
 def bill():
     if not current_user.is_authenticated:
         return redirect('/login')
-    users = User.query.all() # might be the issue
+    users = User.query.all()
     bills = Bills.query.filter_by(user_id=current_user.id).all()
     user_bills = []
     for bill in bills:
@@ -267,4 +274,18 @@ def BillsAPI():
             bill.completion = True
             db.session.commit()
             print(f"bill completion: {bill.completion}")
+    return redirect('/Bills')
+
+@app.route('/BillsRemoveAPI', methods=['POST'])
+def BillsRemoveAPI():
+    if not current_user.is_authenticated:
+        return redirect('/login')
+    bill_to_remove_form = request.form.get('billToRemove')
+    print(f"bill to remove: {bill_to_remove_form}")
+    user_bill_to_remove = User_Bill.query.filter_by(bill_id=bill_to_remove_form).first()
+    db.session.delete(user_bill_to_remove)
+    db.session.commit()
+    bill_to_remove = Bills.query.filter_by(id=bill_to_remove_form).first()
+    db.session.delete(bill_to_remove)
+    db.session.commit()
     return redirect('/Bills')

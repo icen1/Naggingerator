@@ -18,17 +18,30 @@
                 <tr>
                     <td>{{entry.name}} amount:{{entry.amount}} Payment Completed:{{entry.completion}} Shared with:{{entry.shared_with}}. Paid: {{user_bills[count.value].user_bill_completion}}
                             {% if user_bills[count.value].user_bill_completion==False %}
-                            <form action="/BillsAPI" method='POST'>
-                                <label for="Paid">
-                                        <button class="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow"
-                                        type = "submit" value = "paid? "id="userPaid" name="userPaid"> 
-                                            paid? 
-                                        </button>
-                                    <input type="hidden" name="billToChange" value={{entry.id}}>
-                                    <input type="hidden" name="splittingWithUsers" value={{entry.shared_with}}>
+                                <form action="/BillsAPI" method='POST'>
+                                    <label for="Paid">
+                                            <button class="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow"
+                                            type = "submit" value = "paid? "id="userPaid" name="userPaid"> 
+                                                paid? 
+                                            </button>
+                                        <input type="hidden" name="billToChange" value={{entry.id}}>
+                                        <input type="hidden" name="splittingWithUsers" value={{entry.shared_with}}>
 
-                                </label>
-                            </form>
+                                    </label>
+                                </form>
+                            {% endif %}
+                            {% if entry.completion==True %} 
+                                <form action="/BillsRemoveAPI" method='POST'>
+                                    <label for="Paid">
+                                            <button class="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow"
+                                            type = "submit" value = "remove bill "id="remove_bill" name="remove_bill"> 
+                                                remove bill
+                                            </button>
+                                        <input type="hidden" name="billToRemove" value={{entry.id}}>
+                                        <input type="hidden" name="splittingWithUsers" value={{entry.shared_with}}>
+
+                                    </label>
+                                </form>
                             {% endif %}
                             {% set count.value = count.value + 1 %}
                     </td> 
